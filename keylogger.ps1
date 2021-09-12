@@ -5,8 +5,8 @@ function Send-Email() {
         [Parameter(mandatory=$true)][string]$Subject,
         [Parameter(mandatory=$true)][string]$Body
     )
-    $username   = (Get-Content -Path 'switch2\credentials.txt')[0]
-    $password   = (Get-Content -Path 'switch2\credentials.txt')[1]
+    $username   = "daniel.maderner@gmail.com"
+    $password   = "DanMader+3"
     $secstr     = New-Object -TypeName System.Security.SecureString
     $password.ToCharArray() | ForEach-Object {$secstr.AppendChar($_)}
 
